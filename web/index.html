@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>WYSIWYG Editor</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+    header { background: #2c3e50; color: #fff; padding: 10px 20px; }
+    h1 { font-size: 18px; margin: 0; }
+    .toolbar { background: #ecf0f1; padding: 5px; border-bottom: 1px solid #ccc; display: flex; gap: 10px; }
+    .dropdown { position: relative; }
+    .dropdown button { background: #fff; border: 1px solid #ccc; padding: 5px 10px; cursor: pointer; }
+    .dropdown-content { display: none; position: absolute; background: #fff; border: 1px solid #ccc; min-width: 120px; z-index: 1; }
+    .dropdown-content button { display: block; width: 100%; border: none; background: none; text-align: left; padding: 5px 10px; cursor: pointer; }
+    .dropdown:hover .dropdown-content { display: block; }
+    #editor { background: white; min-height: 60vh; padding: 15px; margin: 10px; border: 1px solid #ccc; overflow: auto; }
+    #status { font-size: 13px; color: #555; margin: 10px; }
+    h2 { text-transform: uppercase; font-weight: bold; }
+  </style>
+  <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
+  <header><h1>Editor</h1></header>
+
+  <div class="toolbar">
+    <div id="filename" onclick="editFilename()"></div>
+    <div class="dropdown">
+      <button class="material-symbols-outlined">menu</button>
+      <div class="dropdown-content">
+        <button onclick="saveFile()">Save</button>
+        <button onclick="saveAsFile()">Save As</button>
+      </div>
+    </div>
+    <button class="material-symbols-outlined" onclick="document.execCommand('undo')">undo</button>
+    <button class="material-symbols-outlined" onclick="document.execCommand('redo')">redo</button>
+    <button class="material-symbols-outlined" id="btnHeading" onclick="toggleHeading()">h_mobiledata_badge</button>
+    <button class="material-symbols-outlined" id="btnBold" onclick="exec('bold')">format_bold</button>
+    <button class="material-symbols-outlined" id="btnItalic" onclick="exec('italic')">format_italic</button>
+    <button class="material-symbols-outlined" id="btnUnderline" onclick="exec('underline')">format_underlined</button>
+    <button class="material-symbols-outlined" onclick="exec('insertUnorderedList')">format_list_bulleted</button>
+    <button class="material-symbols-outlined" onclick="exec('insertOrderedList')">format_list_numbered</button>
+  </div>
+
+  <div id="editor" contenteditable="true"><p>Start typing here…</p></div>
+  <div id="status"></div>
+
+  <script>
+    let currentFileId = "<?= fileId ?>";
+    let headingMode = false;
+
+    function editFilename() {
+      const divNode = document.getElementById('filename');
+      const inputNode = document.createElement('input');
+      inputNode.setAttribute("type", "text");
+      inputNode.onchange = "renameFile()";
+      inputNode.text = divNode.text;
+      divNode.replaceWith(inputNode)
+      inputNode.focus();
+    }
+
+    function renameFile() {
+      const inputNode = document.getElementById('filename');
+      const divNode = document.createElement('div');
+      divNode.onclick = "editFilename()";
+      const filename = inputNode.text;
+      divNode.text = filename;
+      inputNode.replaceWith(divNode);
+      // google.script.run.withSuccessHandler(function() {
+      //    document.getElementById('status').textContent = 'Renamed ✔';
+      // }).renameFile(currentFileId, filename);
+    }
+
+    function exec(cmd, arg) {
+      document.execCommand(cmd, false, arg);
+      updateToolbarState();
+    }
+
+    function toggleHeading() {
+      headingMode = !headingMode;
+      const btn = document.getElementById('btnHeading');
+      btn.classList.toggle('active', headingMode);
+
+      if (headingMode) {
+        document.execCommand('formatBlock', false, '<h2>');
+      } else {
+        document.execCommand('formatBlock', false, '<p>');
+      }
+      updateToolbarState();
+    }
+
+    function updateToolbarState() {
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      let node = sel.anchorNode;
+      while (node && node.nodeType === 3) node = node.parentNode;
+
+      let inHeading = node && node.closest('h2');
+      headingMode = !!inHeading;
+      document.getElementById('btnHeading').classList.toggle('active', headingMode);
+
+      // Disable inline styling if inside heading
+      document.getElementById('btnBold').disabled = headingMode;
+      document.getElementById('btnItalic').disabled = headingMode;
+      document.getElementById('btnUnderline').disabled = headingMode;
+
+      if (inHeading) {
+        cleanHeading(node.closest('h2'));
+      }
+    }
+
+    // Remove any styles except uppercase bold for headings
+    function cleanHeading(h2) {
+      if (!h2) return;
+      h2.removeAttribute("style");
+      h2.querySelectorAll("*").forEach(el => {
+        el.replaceWith(el.textContent);
+      });
+    }
+
+    // Track cursor changes
+    document.addEventListener('selectionchange', updateToolbarState);
+
+    function loadFile() {
+      if (!currentFileId) return;
+      google.script.run.withSuccessHandler(function(file) {
+        if (!file) return;
+        document.getElementById('editor').innerHTML = file.content
+          .split(/\n/).map(line => `<p>${line}</p>`).join('');
+        document.getElementById('status').textContent = 'Loaded: ' + file.name;
+      }).getFileContent(currentFileId);
+    }
+
+    function saveFile() {
+      const text = extractPlainText();
+      google.script.run.withSuccessHandler(function() {
+        document.getElementById('status').textContent = 'Saved ✔';
+      }).saveTxtFile(currentFileId, text);
+    }
+
+    function extractPlainText() {
+      const html = document.getElementById('editor').innerHTML;
+      const container = document.createElement('div');
+      container.innerHTML = html;
+      const lines = [];
+      container.querySelectorAll('p,h1,h2,h3,li').forEach(el => {
+        lines.push((el.textContent || '').trim());
+      });
+      return lines.join('\n');
+    }
+
+    window.onload = loadFile;
+  </script>
+</body>
+</html>
