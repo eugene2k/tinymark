@@ -21,17 +21,8 @@
   <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
-  <header><h1>Editor</h1></header>
-
+  <header id="filename"> onclick="editFilename()">Untitled</header>
   <div class="toolbar">
-    <div id="filename" onclick="editFilename()"></div>
-    <div class="dropdown">
-      <button class="material-symbols-outlined">menu</button>
-      <div class="dropdown-content">
-        <button onclick="saveFile()">Save</button>
-        <button onclick="saveAsFile()">Save As</button>
-      </div>
-    </div>
     <button class="material-symbols-outlined" onclick="document.execCommand('undo')">undo</button>
     <button class="material-symbols-outlined" onclick="document.execCommand('redo')">redo</button>
     <button class="material-symbols-outlined" id="btnHeading" onclick="toggleHeading()">h_mobiledata_badge</button>
@@ -42,13 +33,18 @@
     <button class="material-symbols-outlined" onclick="exec('insertOrderedList')">format_list_numbered</button>
   </div>
 
-  <div id="editor" contenteditable="true"><p>Start typing here…</p></div>
+  <div id="editor" contenteditable="true" onfocus="beginEditing(this)"><p>Start typing here…</p></div>
   <div id="status"></div>
 
   <script>
     let currentFileId = "<?= fileId ?>";
     let headingMode = false;
 
+    function beginEditing(content) {
+      content.replaceChildren();
+      content.onfocus = null;
+    }
+    
     function editFilename() {
       const divNode = document.getElementById('filename');
       const inputNode = document.createElement('input');
