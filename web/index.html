@@ -6,8 +6,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
-    header { background: #2c3e50; color: #fff; padding: 10px 20px; }
-    h1 { font-size: 18px; margin: 0; }
+    #filename { background: #2c3e50; color: #fff; padding: 10px 20px;  font-size: 18px; margin: 0; }
     .toolbar { background: #ecf0f1; padding: 5px; border-bottom: 1px solid #ccc; display: flex; gap: 10px; }
     .dropdown { position: relative; }
     .dropdown button { background: #fff; border: 1px solid #ccc; padding: 5px 10px; cursor: pointer; }
@@ -45,22 +44,22 @@
       content.onfocus = null;
     }
     
-    function editFilename() {
-      const divNode = document.getElementById('filename');
+    function editFilename(divNode) {
       const inputNode = document.createElement('input');
       inputNode.setAttribute("type", "text");
       inputNode.onchange = "renameFile()";
       inputNode.text = divNode.text;
-      divNode.replaceWith(inputNode)
+      inputNode.id = 'filename';
+      divNode.replaceWith(inputNode);
       inputNode.focus();
     }
 
-    function renameFile() {
-      const inputNode = document.getElementById('filename');
+    function renameFile(inputNode) {
       const divNode = document.createElement('div');
       divNode.onclick = "editFilename()";
       const filename = inputNode.text;
       divNode.text = filename;
+      divNode.id = 'filename';
       inputNode.replaceWith(divNode);
       // google.script.run.withSuccessHandler(function() {
       //    document.getElementById('status').textContent = 'Renamed ✔';
