@@ -6,7 +6,8 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
-    #filename { background: #2c3e50; color: #fff; padding: 10px 20px;  font-size: 18px; margin: 0; }
+    header { background: #2c3e50; color: #fff; padding: 10px 20px; }
+    #filename { font-size: 18px; margin: 0; }
     .toolbar { background: #ecf0f1; padding: 5px; border-bottom: 1px solid #ccc; display: flex; gap: 10px; }
     .dropdown { position: relative; }
     .dropdown button { background: #fff; border: 1px solid #ccc; padding: 5px 10px; cursor: pointer; }
@@ -20,7 +21,7 @@
   <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
-  <header id="filename" onclick="editFilename()">Untitled</header>
+  <header><h1 id="filename">Untitled</h1></header>
   <div class="toolbar">
     <button class="material-symbols-outlined" onclick="document.execCommand('undo')">undo</button>
     <button class="material-symbols-outlined" onclick="document.execCommand('redo')">redo</button>
@@ -32,35 +33,52 @@
     <button class="material-symbols-outlined" onclick="exec('insertOrderedList')">format_list_numbered</button>
   </div>
 
-  <div id="editor" contenteditable="true" onfocus="beginEditing(this)"><p>Start typing here…</p></div>
+  <div id="editor" contenteditable="true"><p>Start typing here…</p></div>
   <div id="status"></div>
 
   <script>
     let currentFileId = "<?= fileId ?>";
     let headingMode = false;
 
-    function beginEditing(content) {
+    let editor = document.getElementById("editor");
+    editor.addEventListener("focus", beginEditing);
+
+    let h1 = document.getElementById("filename");
+    h1.addEventListener("click", enterRename);
+    
+    function beginEditing(event) {
+      const content = event.target;
       content.replaceChildren();
-      content.onfocus = null;
+      content.removeEventListener("focus", beginEditing);
     }
     
-    function editFilename(divNode) {
-      const inputNode = document.createElement('input');
-      inputNode.setAttribute("type", "text");
-      inputNode.onchange = "renameFile()";
-      inputNode.text = divNode.text;
-      inputNode.id = 'filename';
-      divNode.replaceWith(inputNode);
-      inputNode.focus();
+    function enterRename(event) {
+      const node = event.target;
+      const filename = node.innerText;
+      let newNode = document.createElement('input');
+      newNode.setAttribute("type", "text");
+      newNode.value = filename;
+      newNode.id = 'filename';
+      newNode.addEventListener("change", renameFile);
+      newNode.addEventListener("blur", exitRename);
+      node.replaceWith(newNode);
+      newNode.focus();
     }
 
-    function renameFile(inputNode) {
-      const divNode = document.createElement('div');
-      divNode.onclick = "editFilename()";
-      const filename = inputNode.text;
-      divNode.text = filename;
-      divNode.id = 'filename';
-      inputNode.replaceWith(divNode);
+    function exitRename(event) {
+      const node = event.target;
+      const filename = node.value;
+      let newNode = document.createElement('h1');
+      newNode.innerText = filename;
+      newNode.id = 'filename';
+      newNode.addEventListener("click", enterRename);
+      node.replaceWith(newNode);
+    }
+
+    function renameFile(event) {
+      const filename = event.target.value;
+      console.log(filename);
+      event.target.blur();
       // google.script.run.withSuccessHandler(function() {
       //    document.getElementById('status').textContent = 'Renamed ✔';
       // }).renameFile(currentFileId, filename);
