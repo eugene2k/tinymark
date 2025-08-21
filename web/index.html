@@ -2,38 +2,70 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>WYSIWYG Editor</title>
+  <title>TinyMark Editor</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+    body { display: flex; flex-direction: column; font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
     header { background: #2c3e50; color: #fff; padding: 10px 20px; }
     #filename { font-size: 18px; margin: 0; }
     .toolbar { background: #ecf0f1; padding: 5px; border-bottom: 1px solid #ccc; display: flex; gap: 10px; }
-    .dropdown { position: relative; }
-    .dropdown button { background: #fff; border: 1px solid #ccc; padding: 5px 10px; cursor: pointer; }
-    .dropdown-content { display: none; position: absolute; background: #fff; border: 1px solid #ccc; min-width: 120px; z-index: 1; }
-    .dropdown-content button { display: block; width: 100%; border: none; background: none; text-align: left; padding: 5px 10px; cursor: pointer; }
-    .dropdown:hover .dropdown-content { display: block; }
-    #editor { background: white; min-height: 60vh; padding: 15px; margin: 10px; border: 1px solid #ccc; overflow: auto; }
+
+    #editor { flex: 1 1 auto; background: white; min-height: 0; padding: 15px; margin: 5px; border: 1px solid #ccc; overflow: auto; }
     #status { font-size: 13px; color: #555; margin: 10px; }
+    header, .toolbar, #status {
+      flex: 0 0 auto;
+    }
     h2 { text-transform: uppercase; font-weight: bold; }
+    html, body { margin: 0; height: 100%; }
+    .btn-group {
+      display: inline-flex;
+    }
+
+    .btn-group button {
+      font-family: "Material Symbols Outlined";
+      font-size: 24px;
+      line-height: 1;
+      border: 1px solid #ccc;
+      background: white;
+      padding: 5px 7px;
+      cursor: pointer;
+    }
+
+    .btn-group button:not(:first-child) {
+      border-left: none; /* remove inner borders */
+    }
+
+    .btn-group button:first-child {
+      border-top-left-radius: 4px;
+      border-bottom-left-radius: 4px;
+    }
+
+    .btn-group button:last-child {
+      border-top-right-radius: 4px;
+      border-bottom-right-radius: 4px;
+    }
   </style>
   <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
   <header><h1 id="filename">Untitled</h1></header>
   <div class="toolbar">
-    <button class="material-symbols-outlined" onclick="document.execCommand('undo')">undo</button>
-    <button class="material-symbols-outlined" onclick="document.execCommand('redo')">redo</button>
-    <button class="material-symbols-outlined" id="btnHeading" onclick="toggleHeading()">h_mobiledata_badge</button>
-    <button class="material-symbols-outlined" id="btnBold" onclick="exec('bold')">format_bold</button>
-    <button class="material-symbols-outlined" id="btnItalic" onclick="exec('italic')">format_italic</button>
-    <button class="material-symbols-outlined" id="btnUnderline" onclick="exec('underline')">format_underlined</button>
-    <button class="material-symbols-outlined" onclick="exec('insertUnorderedList')">format_list_bulleted</button>
-    <button class="material-symbols-outlined" onclick="exec('insertOrderedList')">format_list_numbered</button>
+    <div class="btn-group">
+      <button onclick="document.execCommand('undo')">undo</button>
+      <button onclick="document.execCommand('redo')">redo</button>
+    </div>
+    <div class="btn-group">
+      <button id="btnHeading" onclick="toggleHeading()">h_mobiledata_badge</button>
+      <button id="btnBold" onclick="exec('bold')">format_bold</button>
+      <button id="btnItalic" onclick="exec('italic')">format_italic</button>
+      <button id="btnUnderline" onclick="exec('underline')">format_underlined</button>
+    </div>
+    <div class="btn-group">
+      <button onclick="exec('insertUnorderedList')">format_list_bulleted</button>
+      <button onclick="exec('insertOrderedList')">format_list_numbered</button>
+    </div>
   </div>
-
-  <div id="editor" contenteditable="true"><p>Start typing here…</p></div>
+  <div id="editor" contenteditable="true">start typing here…</div>
   <div id="status"></div>
 
   <script>
